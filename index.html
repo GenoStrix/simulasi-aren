@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulasi DESS - Gula Aren</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h2>DSS Produksi Gula Aren</h2>
+        <p>Simulasi Antrean Stokastik M/M/c</p>
+      </header>
+
+      <div class="content">
+        <div class="card form-section">
+          <h3>Parameter Simulasi</h3>
+          <form id="simForm">
+            <label>Rata-rata Waktu Kedatangan Petani (Menit):</label>
+            <input type="number" id="interarrival" value="15" required />
+
+            <label>Rata-rata Waktu Memasak di Tungku (Menit):</label>
+            <input type="number" id="service" value="40" required />
+
+            <label>Maksimal Jumlah Tungku (Skenario c):</label>
+            <input type="number" id="maks_tungku" value="5" max="10" required />
+
+            <button type="submit" id="btn-submit">Mulai Simulasi</button>
+          </form>
+        </div>
+
+        <div class="card chart-section">
+          <h3>Hasil Output (Trade-off)</h3>
+          <canvas id="simChart"></canvas>
+          <div id="kesimpulan"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
