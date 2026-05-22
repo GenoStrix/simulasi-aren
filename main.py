@@ -4,8 +4,7 @@ from pydantic import BaseModel
 import simpy
 import random
 
-# INI ADALAH VARIABEL 'app' YANG DICARI OLEH UVICORN
-app = FastAPI() 
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,24 +21,39 @@ class InputSimulasi(BaseModel):
 def jalankan_simpy(interarrival, service, c, sim_time=4800):
     wait_times = []
     server_busy_time = 0
+    log_petani = [] # List untuk menyimpan data riwayat persis seperti di Excel
 
-    def petani(env, tungku):
+    def petani(env, tungku, id_petani):
         nonlocal server_busy_time
         waktu_datang = env.now
+        
         with tungku.request() as req:
             yield req
             waktu_tunggu = env.now - waktu_datang
             wait_times.append(waktu_tunggu)
+            
             mulai_masak = env.now
             durasi_masak = random.expovariate(1.0 / service)
+            
+            # Menyimpan 30 data pertama untuk ditampilkan di web
+            if len(log_petani) < 30:
+                log_petani.append({
+                    "id": id_petani,
+                    "waktu_datang": round(waktu_datang, 2),
+                    "durasi_masak": round(durasi_masak, 2),
+                    "waktu_tunggu": round(waktu_tunggu, 2)
+                })
+                
             yield env.timeout(durasi_masak)
             server_busy_time += (env.now - mulai_masak)
 
     def setup(env):
         tungku = simpy.Resource(env, capacity=c)
+        id_petani = 1 # Inisialisasi ID Petani
         while True:
             yield env.timeout(random.expovariate(1.0 / interarrival))
-            env.process(petani(env, tungku))
+            env.process(petani(env, tungku, id_petani))
+            id_petani += 1
 
     env = simpy.Environment()
     env.process(setup(env))
@@ -51,7 +65,8 @@ def jalankan_simpy(interarrival, service, c, sim_time=4800):
     return {
         "tungku": c,
         "wq": round(rata_waktu_tunggu, 2),
-        "rho": round(min(utilisasi, 100), 2)
+        "rho": round(min(utilisasi, 100), 2),
+        "log_petani": log_petani # Kirim riwayat data ke Frontend
     }
 
 @app.post("/api/simulate")

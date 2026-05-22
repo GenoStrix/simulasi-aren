@@ -4,21 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simulasi DESS - Gula Aren</title>
+    <!-- Link ke file CSS terpisah -->
     <link rel="stylesheet" href="style.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Mengambil Chart.js dari internet -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="container">
       <header>
-        <h2>DSS Produksi Gula Aren</h2>
-        <p>Simulasi Antrean Stokastik M/M/c</p>
+        <h2 style="color: white; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5)">
+          DSS Produksi Gula Aren
+        </h2>
+        <p style="color: #f1f1f1; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5)">
+          Simulasi Antrean Stokastik M/M/c
+        </p>
       </header>
 
       <div class="content">
+        <!-- Form Input -->
         <div class="card form-section">
           <h3>Parameter Simulasi</h3>
           <form id="simForm">
@@ -35,14 +38,89 @@
           </form>
         </div>
 
+        <!-- Area Grafik & Output -->
         <div class="card chart-section">
           <h3>Hasil Output (Trade-off)</h3>
           <canvas id="simChart"></canvas>
           <div id="kesimpulan"></div>
+
+          <!-- BAGIAN TABEL DATA SINTETIS -->
+          <div style="margin-top: 30px">
+            <h4
+              style="
+                margin-bottom: 10px;
+                color: #34495e;
+                border-bottom: 2px solid #3498db;
+                display: inline-block;
+                padding-bottom: 5px;
+              "
+            >
+              Sampel Log Data Sintetis
+            </h4>
+
+            <div
+              style="
+                height: 250px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+              "
+            >
+              <table
+                style="
+                  width: 100%;
+                  border-collapse: collapse;
+                  font-size: 13px;
+                  text-align: center;
+                "
+              >
+                <thead
+                  style="
+                    background-color: #3498db;
+                    color: white;
+                    position: sticky;
+                    top: 0;
+                  "
+                >
+                  <tr>
+                    <th style="padding: 10px">ID Petani</th>
+                    <th style="padding: 10px">Waktu Datang (mnt)</th>
+                    <th style="padding: 10px">Durasi Masak (mnt)</th>
+                    <th style="padding: 10px">Waktu Tunggu (mnt)</th>
+                  </tr>
+                </thead>
+                <tbody id="tabel-data">
+                  <!-- Data akan diisi oleh JavaScript di sini -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- TAMBAHAN TOMBOL DOWNLOAD -->
+            <div style="text-align: right; margin-top: 10px">
+              <button
+                id="btn-download"
+                style="
+                  background-color: #27ae60;
+                  color: white;
+                  border: none;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  width: auto;
+                  padding: 10px 20px;
+                  font-size: 14px;
+                  display: none;
+                  font-weight: bold;
+                "
+              >
+                📥 Download Data (CSV)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Link ke file JavaScript terpisah -->
     <script src="script.js"></script>
   </body>
 </html>

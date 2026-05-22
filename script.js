@@ -1,22 +1,22 @@
-let myChart = null; // Menyimpan instance chart agar bisa di-reset
+let myChart = null;
+let globalLogData = []; // Variabel baru untuk menyimpan data yang siap didownload
 
 document.getElementById("simForm").addEventListener("submit", async (e) => {
-  e.preventDefault(); // Mencegah halaman reload
+  e.preventDefault();
 
-  // Ambil data dari form
   const interarrival = parseFloat(
     document.getElementById("interarrival").value,
   );
   const service = parseFloat(document.getElementById("service").value);
   const maks_tungku = parseInt(document.getElementById("maks_tungku").value);
   const btn = document.getElementById("btn-submit");
+  const btnDownload = document.getElementById("btn-download");
 
-  // Ubah status tombol saat loading
   btn.innerText = "Sedang Menghitung...";
   btn.disabled = true;
+  btnDownload.style.display = "none"; // Sembunyikan tombol download saat menghitung
 
   try {
-    // Panggil API Backend FastAPI
     const response = await fetch("http://127.0.0.1:8000/api/simulate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -32,24 +32,51 @@ document.getElementById("simForm").addEventListener("submit", async (e) => {
     if (result.status === "success") {
       gambarGrafik(result.data);
       buatKesimpulan(result.data);
+
+      // Simpan data log dan munculkan tombol download
+      if (result.data[0] && result.data[0].log_petani) {
+        globalLogData = result.data[0].log_petani;
+        btnDownload.style.display = "inline-block";
+      }
     }
   } catch (error) {
     alert("Gagal menghubungi server. Pastikan Backend FastAPI sudah menyala!");
     console.error(error);
   } finally {
-    // Kembalikan tombol seperti semula
     btn.innerText = "Mulai Simulasi";
     btn.disabled = false;
   }
 });
 
+// EVENT LISTENER BARU UNTUK TOMBOL DOWNLOAD
+document.getElementById("btn-download").addEventListener("click", () => {
+  if (globalLogData.length === 0) return;
+
+  // Buat header CSV
+  let csvContent =
+    "ID Petani,Waktu Datang (Menit),Durasi Masak (Menit),Waktu Tunggu (Menit)\n";
+
+  // Gabungkan data
+  globalLogData.forEach((row) => {
+    csvContent += `Petani-${row.id},${row.waktu_datang},${row.durasi_masak},${row.waktu_tunggu}\n`;
+  });
+
+  // Buat file dan paksa browser untuk mendownloadnya
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "Dataset_Simulasi_Aren.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
 function gambarGrafik(dataSimulasi) {
-  // Siapkan array kosong untuk sumbu X dan Y
   const labels = [];
   const dataWq = [];
   const dataRho = [];
 
-  // Pecah data JSON ke dalam array
   dataSimulasi.forEach((item) => {
     labels.push(`c = ${item.tungku}`);
     dataWq.push(item.wq);
@@ -58,12 +85,10 @@ function gambarGrafik(dataSimulasi) {
 
   const ctx = document.getElementById("simChart").getContext("2d");
 
-  // Hapus grafik lama jika sudah ada (agar tidak tertumpuk)
   if (myChart !== null) {
     myChart.destroy();
   }
 
-  // Buat Grafik baru menggunakan Chart.js
   myChart = new Chart(ctx, {
     type: "bar",
     data: {
@@ -106,7 +131,7 @@ function gambarGrafik(dataSimulasi) {
           display: true,
           position: "right",
           title: { display: true, text: "Waktu Tunggu (Menit)" },
-          grid: { drawOnChartArea: false }, // Agar garis grid tidak bertumpuk
+          grid: { drawOnChartArea: false },
         },
       },
     },
@@ -116,21 +141,43 @@ function gambarGrafik(dataSimulasi) {
 function buatKesimpulan(dataSimulasi) {
   const divKesimpulan = document.getElementById("kesimpulan");
   let rekomendasi = "";
-  let batasFermentasi = 60; // Anggap nira rusak jika antre lebih dari 60 menit
+  let batasFermentasi = 60;
 
-  // Mencari tungku paling optimal (Wq di bawah 60, Utilisasi paling tinggi di antara yang aman)
   const skenarioAman = dataSimulasi.filter(
     (item) => item.wq <= batasFermentasi,
   );
 
   if (skenarioAman.length > 0) {
-    const optimal = skenarioAman[0]; // Ambil yang tungkunya paling sedikit tapi aman
+    const optimal = skenarioAman[0];
     rekomendasi = `<strong>Keputusan Berbasis Data:</strong><br> Jumlah tungku optimal adalah <strong>${optimal.tungku} Tungku</strong>. 
         Pada titik ini, waktu tunggu nira adalah ${optimal.wq} menit (Aman dari fermentasi), 
         dan tingkat utilisasi tungku berada pada ${optimal.rho}%.`;
   } else {
-    rekomendasi = `<strong style="color:red;">Peringatan Kritis:</strong><br> Semua skenario menyebabkan nira terfermentasi (waktu tunggu terlalu lama). Tambahkan lebih banyak tungku!`;
+    rekomendasi = `<strong style="color:red;">Peringatan Kritis:</strong><br> Semua skenario menyebabkan nira terfermentasi. Tambahkan lebih banyak tungku!`;
   }
 
   divKesimpulan.innerHTML = rekomendasi;
+
+  if (dataSimulasi[0] && dataSimulasi[0].log_petani) {
+    buatTabelData(dataSimulasi[0].log_petani);
+  }
+}
+
+function buatTabelData(logData) {
+  const tbody = document.getElementById("tabel-data");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  logData.forEach((petani) => {
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #eee";
+    tr.innerHTML = `
+            <td style="padding: 5px;">Petani-${petani.id}</td>
+            <td style="padding: 5px;">${petani.waktu_datang}</td>
+            <td style="padding: 5px;">${petani.durasi_masak}</td>
+            <td style="padding: 5px;">${petani.waktu_tunggu}</td>
+        `;
+    tbody.appendChild(tr);
+  });
 }

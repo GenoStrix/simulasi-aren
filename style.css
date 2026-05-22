@@ -6,9 +6,16 @@
 }
 
 body {
-  background-color: #f4f6f8;
-  color: #1a1a1a;
-  padding: 24px;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("Pohon-aren.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+
+  color: #333;
+  padding: 20px;
 }
 
 .container {
@@ -41,7 +48,7 @@ header {
 header h2 {
   font-size: 24px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #909090;
   margin-bottom: 4px;
 }
 
